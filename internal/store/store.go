@@ -1,13 +1,23 @@
 package store
-import("database/sql";"fmt";"os";"path/filepath";"time";_ "modernc.org/sqlite")
-type DB struct{*sql.DB}
-type Job struct{ID int64 `json:"id"`;Name string `json:"name"`;Schedule string `json:"schedule"`;Command string `json:"command"`;Status string `json:"status"`;LastRun *string `json:"last_run"`;RunCount int `json:"run_count"`;LastOutput string `json:"last_output"`;CreatedAt time.Time `json:"created_at"`}
-type Run struct{ID int64 `json:"id"`;JobID int64 `json:"job_id"`;Status string `json:"status"`;Output string `json:"output"`;DurationMs int64 `json:"duration_ms"`;RanAt time.Time `json:"ran_at"`}
-func Open(d string)(*DB,error){os.MkdirAll(d,0755);dsn:=filepath.Join(d,"mainspring.db")+"?_journal_mode=WAL&_busy_timeout=5000";db,err:=sql.Open("sqlite",dsn);if err!=nil{return nil,fmt.Errorf("open: %w",err)};db.SetMaxOpenConns(1);migrate(db);return &DB{db},nil}
-func migrate(db *sql.DB){db.Exec(`CREATE TABLE IF NOT EXISTS jobs(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT NOT NULL,schedule TEXT NOT NULL,command TEXT NOT NULL,status TEXT DEFAULT 'active',last_run TEXT,run_count INTEGER DEFAULT 0,last_output TEXT DEFAULT '',created_at DATETIME DEFAULT CURRENT_TIMESTAMP);CREATE TABLE IF NOT EXISTS runs(id INTEGER PRIMARY KEY AUTOINCREMENT,job_id INTEGER NOT NULL,status TEXT NOT NULL,output TEXT DEFAULT '',duration_ms INTEGER DEFAULT 0,ran_at DATETIME DEFAULT CURRENT_TIMESTAMP)`)}
-func(db *DB)Create(j *Job)error{res,err:=db.Exec(`INSERT INTO jobs(name,schedule,command)VALUES(?,?,?)`,j.Name,j.Schedule,j.Command);if err!=nil{return err};j.ID,_=res.LastInsertId();return nil}
-func(db *DB)List()([]Job,error){rows,_:=db.Query(`SELECT id,name,schedule,command,status,last_run,run_count,last_output,created_at FROM jobs ORDER BY created_at DESC`);defer rows.Close();var out[]Job;for rows.Next(){var j Job;rows.Scan(&j.ID,&j.Name,&j.Schedule,&j.Command,&j.Status,&j.LastRun,&j.RunCount,&j.LastOutput,&j.CreatedAt);out=append(out,j)};return out,nil}
-func(db *DB)RecordRun(r *Run){res,_:=db.Exec(`INSERT INTO runs(job_id,status,output,duration_ms)VALUES(?,?,?,?)`,r.JobID,r.Status,r.Output,r.DurationMs);r.ID,_=res.LastInsertId();db.Exec(`UPDATE jobs SET last_run=CURRENT_TIMESTAMP,run_count=run_count+1,last_output=?,status=? WHERE id=?`,r.Output,r.Status,r.JobID)}
-func(db *DB)ListRuns(jobID int64)([]Run,error){rows,_:=db.Query(`SELECT id,job_id,status,output,duration_ms,ran_at FROM runs WHERE job_id=? ORDER BY ran_at DESC LIMIT 50`,jobID);defer rows.Close();var out[]Run;for rows.Next(){var r Run;rows.Scan(&r.ID,&r.JobID,&r.Status,&r.Output,&r.DurationMs,&r.RanAt);out=append(out,r)};return out,nil}
-func(db *DB)Delete(id int64){db.Exec(`DELETE FROM runs WHERE job_id=?`,id);db.Exec(`DELETE FROM jobs WHERE id=?`,id)}
-func(db *DB)Stats()(map[string]interface{},error){var jobs,runs int;db.QueryRow(`SELECT COUNT(*) FROM jobs WHERE status='active'`).Scan(&jobs);db.QueryRow(`SELECT COUNT(*) FROM runs`).Scan(&runs);return map[string]interface{}{"active_jobs":jobs,"total_runs":runs},nil}
+import ("database/sql";"fmt";"os";"path/filepath";"time";_ "modernc.org/sqlite")
+type DB struct{db *sql.DB}
+type Item struct{
+	ID string `json:"id"`
+	Name string `json:"name"`
+	Description string `json:"description"`
+	Status string `json:"status"`
+	Category string `json:"category"`
+	Tags string `json:"tags"`
+	CreatedAt string `json:"created_at"`
+}
+func Open(d string)(*DB,error){if err:=os.MkdirAll(d,0755);err!=nil{return nil,err};db,err:=sql.Open("sqlite",filepath.Join(d,"mainspring.db")+"?_journal_mode=WAL&_busy_timeout=5000");if err!=nil{return nil,err}
+db.Exec(`CREATE TABLE IF NOT EXISTS items(id TEXT PRIMARY KEY,name TEXT NOT NULL,description TEXT DEFAULT '',status TEXT DEFAULT 'active',category TEXT DEFAULT '',tags TEXT DEFAULT '',created_at TEXT DEFAULT(datetime('now')))`)
+return &DB{db:db},nil}
+func(d *DB)Close()error{return d.db.Close()}
+func genID()string{return fmt.Sprintf("%d",time.Now().UnixNano())}
+func now()string{return time.Now().UTC().Format(time.RFC3339)}
+func(d *DB)Create(e *Item)error{e.ID=genID();e.CreatedAt=now();_,err:=d.db.Exec(`INSERT INTO items(id,name,description,status,category,tags,created_at)VALUES(?,?,?,?,?,?,?)`,e.ID,e.Name,e.Description,e.Status,e.Category,e.Tags,e.CreatedAt);return err}
+func(d *DB)Get(id string)*Item{var e Item;if d.db.QueryRow(`SELECT id,name,description,status,category,tags,created_at FROM items WHERE id=?`,id).Scan(&e.ID,&e.Name,&e.Description,&e.Status,&e.Category,&e.Tags,&e.CreatedAt)!=nil{return nil};return &e}
+func(d *DB)List()[]Item{rows,_:=d.db.Query(`SELECT id,name,description,status,category,tags,created_at FROM items ORDER BY created_at DESC`);if rows==nil{return nil};defer rows.Close();var o []Item;for rows.Next(){var e Item;rows.Scan(&e.ID,&e.Name,&e.Description,&e.Status,&e.Category,&e.Tags,&e.CreatedAt);o=append(o,e)};return o}
+func(d *DB)Delete(id string)error{_,err:=d.db.Exec(`DELETE FROM items WHERE id=?`,id);return err}
+func(d *DB)Count()int{var n int;d.db.QueryRow(`SELECT COUNT(*) FROM items`).Scan(&n);return n}
