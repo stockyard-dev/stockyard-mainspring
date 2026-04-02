@@ -23,5 +23,24 @@ func now()string{return time.Now().UTC().Format(time.RFC3339)}
 func(d *DB)Create(e *Job)error{e.ID=genID();e.CreatedAt=now();_,err:=d.db.Exec(`INSERT INTO jobs(id,name,schedule,command,webhook_url,enabled,last_run_at,last_result,run_count,fail_count,created_at)VALUES(?,?,?,?,?,?,?,?,?,?,?)`,e.ID,e.Name,e.Schedule,e.Command,e.WebhookURL,e.Enabled,e.LastRunAt,e.LastResult,e.RunCount,e.FailCount,e.CreatedAt);return err}
 func(d *DB)Get(id string)*Job{var e Job;if d.db.QueryRow(`SELECT id,name,schedule,command,webhook_url,enabled,last_run_at,last_result,run_count,fail_count,created_at FROM jobs WHERE id=?`,id).Scan(&e.ID,&e.Name,&e.Schedule,&e.Command,&e.WebhookURL,&e.Enabled,&e.LastRunAt,&e.LastResult,&e.RunCount,&e.FailCount,&e.CreatedAt)!=nil{return nil};return &e}
 func(d *DB)List()[]Job{rows,_:=d.db.Query(`SELECT id,name,schedule,command,webhook_url,enabled,last_run_at,last_result,run_count,fail_count,created_at FROM jobs ORDER BY created_at DESC`);if rows==nil{return nil};defer rows.Close();var o []Job;for rows.Next(){var e Job;rows.Scan(&e.ID,&e.Name,&e.Schedule,&e.Command,&e.WebhookURL,&e.Enabled,&e.LastRunAt,&e.LastResult,&e.RunCount,&e.FailCount,&e.CreatedAt);o=append(o,e)};return o}
+func(d *DB)Update(e *Job)error{_,err:=d.db.Exec(`UPDATE jobs SET name=?,schedule=?,command=?,webhook_url=?,enabled=?,last_run_at=?,last_result=?,run_count=?,fail_count=? WHERE id=?`,e.Name,e.Schedule,e.Command,e.WebhookURL,e.Enabled,e.LastRunAt,e.LastResult,e.RunCount,e.FailCount,e.ID);return err}
 func(d *DB)Delete(id string)error{_,err:=d.db.Exec(`DELETE FROM jobs WHERE id=?`,id);return err}
 func(d *DB)Count()int{var n int;d.db.QueryRow(`SELECT COUNT(*) FROM jobs`).Scan(&n);return n}
+
+func(d *DB)Search(q string, filters map[string]string)[]Job{
+    where:="1=1"
+    args:=[]any{}
+    if q!=""{
+        where+=" AND (name LIKE ?)"
+        args=append(args,"%"+q+"%");
+    }
+    if v,ok:=filters["enabled"];ok&&v!=""{where+=" AND enabled=?";args=append(args,v)}
+    rows,_:=d.db.Query(`SELECT id,name,schedule,command,webhook_url,enabled,last_run_at,last_result,run_count,fail_count,created_at FROM jobs WHERE `+where+` ORDER BY created_at DESC`,args...)
+    if rows==nil{return nil};defer rows.Close()
+    var o []Job;for rows.Next(){var e Job;rows.Scan(&e.ID,&e.Name,&e.Schedule,&e.Command,&e.WebhookURL,&e.Enabled,&e.LastRunAt,&e.LastResult,&e.RunCount,&e.FailCount,&e.CreatedAt);o=append(o,e)};return o
+}
+
+func(d *DB)Stats()map[string]any{
+    m:=map[string]any{"total":d.Count()}
+    return m
+}
