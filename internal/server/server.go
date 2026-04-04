@@ -35,6 +35,7 @@ patch.Command=existing.Command};if patch.WebhookURL==""{
 patch.WebhookURL=existing.WebhookURL};if patch.LastRunAt==""{
 patch.LastRunAt=existing.LastRunAt};if patch.LastResult==""{
 patch.LastResult=existing.LastResult}
+    if patch.Enabled==0{patch.Enabled=existing.Enabled};if patch.RunCount==0{patch.RunCount=existing.RunCount};if patch.FailCount==0{patch.FailCount=existing.FailCount}
     s.db.Update(&patch);wj(w,200,s.db.Get(patch.ID))
 }
 func(s *Server)del(w http.ResponseWriter,r *http.Request){s.db.Delete(r.PathValue("id"));wj(w,200,map[string]string{"deleted":"ok"})}
