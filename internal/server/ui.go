@@ -1,27 +1,57 @@
 package server
 import "net/http"
-func(s *Server)dashboard(w http.ResponseWriter,r *http.Request){w.Header().Set("Content-Type","text/html; charset=utf-8");w.Write([]byte(dashHTML))}
-const dashHTML=`<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mainspring</title>
-<style>:root{--bg:#1a1410;--bg2:#241e18;--bg3:#2e261e;--rust:#c45d2c;--rl:#e8753a;--leather:#a0845c;--cream:#f0e6d3;--cm:#7a7060;--gold:#d4a843;--green:#4a9e5c;--mono:'JetBrains Mono',Consolas,monospace;--serif:'Libre Baskerville',Georgia,serif}*{margin:0;padding:0;box-sizing:border-box}body{background:var(--bg);color:var(--cream);font-family:var(--mono);font-size:13px;line-height:1.6}.hdr{padding:.6rem 1.2rem;border-bottom:1px solid var(--bg3);display:flex;justify-content:space-between;align-items:center}.hdr h1{font-family:var(--serif);font-size:1rem}.hdr h1 span{color:var(--rl)}.sub{font-size:.65rem;color:var(--cm)}.main{max-width:700px;margin:0 auto;padding:1rem}.search{width:100%;background:var(--bg2);border:1px solid var(--bg3);color:var(--cream);padding:.4rem .6rem;font-family:var(--mono);font-size:.78rem;margin-bottom:.6rem;outline:none}.search:focus{border-color:var(--rust)}.stats{display:flex;gap:1rem;margin-bottom:.8rem;flex-wrap:wrap}.stat{text-align:center}.stat-n{font-size:1.2rem;color:var(--rl);font-family:var(--serif)}.stat-l{font-size:.55rem;color:var(--cm);text-transform:uppercase;letter-spacing:1px}.btn{font-family:var(--mono);font-size:.68rem;padding:.3rem .6rem;border:1px solid;cursor:pointer;background:transparent}.btn-p{border-color:var(--rust);color:var(--rl)}.btn-p:hover{background:var(--rust);color:var(--cream)}.item{background:var(--bg2);border:1px solid var(--bg3);padding:.6rem;margin-bottom:.3rem;cursor:pointer;transition:border-color .15s}.item:hover{border-color:var(--leather)}.item h3{font-size:.82rem;margin-bottom:.15rem}.item-meta{font-size:.65rem;color:var(--cm);display:flex;gap:.5rem;flex-wrap:wrap}.empty{text-align:center;padding:2rem;color:var(--cm);font-style:italic;font-family:var(--serif)}.modal-bg{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;z-index:100}.modal{background:var(--bg2);border:1px solid var(--bg3);padding:1.5rem;width:90%;max-width:500px;max-height:90vh;overflow-y:auto}.modal h2{font-family:var(--serif);font-size:.9rem;margin-bottom:1rem}label.fl{display:block;font-size:.65rem;color:var(--leather);text-transform:uppercase;letter-spacing:1px;margin-bottom:.2rem;margin-top:.5rem}input[type=text],input[type=number]{background:var(--bg);border:1px solid var(--bg3);color:var(--cream);padding:.35rem .5rem;font-family:var(--mono);font-size:.78rem;width:100%;outline:none}.del{color:var(--cm);cursor:pointer;font-size:.65rem;float:right}.del:hover{color:var(--rust)}</style></head>
-<body><div class="hdr"><div><h1><span>Stockyard</span> Mainspring</h1><div class="sub">Self-hosted cron job scheduler</div></div><button class="btn btn-p" onclick="showModal()">+ New</button></div>
-<div class="main"><div id="upgrade-banner" style="display:none;background:#241e18;border:1px solid #8b3d1a;border-left:3px solid #c45d2c;padding:.6rem 1rem;font-size:.78rem;color:#bfb5a3;margin-bottom:.8rem"><strong style="color:#f0e6d3">Free tier</strong> — 10 items max. <a href="https://stockyard.dev/mainspring/" target="_blank" style="color:#e8753a">Upgrade to Pro →</a></div><div class="stats" id="stats"></div>
-<input class="search" id="search" placeholder="Search jobs..." oninput="debounceSearch()">
-<div id="list"></div></div>
-<div class="modal-bg" id="modal" style="display:none" onclick="if(event.target===this)hideModal()"><div class="modal"><h2 id="mt">New Job</h2>
-<label class="fl">Name</label><input type="text" id="f-name" placeholder="Name"><label class="fl">Schedule</label><input type="text" id="f-schedule" placeholder="Schedule"><label class="fl">Command</label><input type="text" id="f-command" placeholder="Command"><label class="fl">Webhook Url</label><input type="text" id="f-webhook_url" placeholder="Webhook Url"><label class="fl">Enabled</label><input type="number" id="f-enabled" placeholder="Enabled"><label class="fl">Last Run At</label><input type="text" id="f-last_run_at" placeholder="Last Run At"><label class="fl">Last Result</label><input type="text" id="f-last_result" placeholder="Last Result"><label class="fl">Run Count</label><input type="number" id="f-run_count" placeholder="Run Count"><label class="fl">Fail Count</label><input type="number" id="f-fail_count" placeholder="Fail Count">
-<div style="margin-top:1rem;display:flex;gap:.5rem"><button class="btn btn-p" onclick="save()">Save</button><button class="btn" style="color:var(--cm);border-color:var(--bg3)" onclick="hideModal()">Cancel</button></div></div></div>
+func(s *Server)dashboard(w http.ResponseWriter,r *http.Request){w.Header().Set("Content-Type","text/html");w.Write([]byte(dashHTML))}
+const dashHTML=`<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Mainspring</title>
+<style>:root{--bg:#1a1410;--bg2:#241e18;--bg3:#2e261e;--rust:#e8753a;--leather:#a0845c;--cream:#f0e6d3;--cd:#bfb5a3;--cm:#7a7060;--gold:#d4a843;--green:#4a9e5c;--red:#c94444;--mono:'JetBrains Mono',monospace}
+*{margin:0;padding:0;box-sizing:border-box}body{background:var(--bg);color:var(--cream);font-family:var(--mono);line-height:1.5}
+.hdr{padding:1rem 1.5rem;border-bottom:1px solid var(--bg3);display:flex;justify-content:space-between;align-items:center}.hdr h1{font-size:.9rem;letter-spacing:2px}
+.main{padding:1.5rem;max-width:900px;margin:0 auto}
+.job{background:var(--bg2);border:1px solid var(--bg3);padding:.8rem 1rem;margin-bottom:.5rem}
+.job-top{display:flex;justify-content:space-between;align-items:center}
+.job-name{font-size:.82rem;color:var(--cream)}
+.job-schedule{font-size:.65rem;color:var(--gold);margin-top:.1rem}
+.job-cmd{font-size:.65rem;color:var(--cd);background:var(--bg);padding:.2rem .4rem;border:1px solid var(--bg3);margin-top:.3rem;word-break:break-all}
+.job-meta{font-size:.6rem;color:var(--cm);margin-top:.3rem;display:flex;gap:.8rem}
+.job-result{font-size:.6rem;margin-top:.2rem;padding:.2rem .4rem}
+.result-success{background:#4a9e5c22;color:var(--green);border:1px solid #4a9e5c44}
+.result-failed{background:#c9444422;color:var(--red);border:1px solid #c9444444}
+.toggle{position:relative;width:36px;height:18px;cursor:pointer;display:inline-block;vertical-align:middle}
+.toggle input{opacity:0;width:0;height:0}.toggle .sl{position:absolute;inset:0;background:var(--bg3);border-radius:9px;transition:.2s}
+.toggle .sl:before{content:'';position:absolute;width:14px;height:14px;left:2px;bottom:2px;background:var(--cm);border-radius:50%;transition:.2s}
+.toggle input:checked+.sl{background:var(--green)}.toggle input:checked+.sl:before{transform:translateX(18px);background:var(--cream)}
+.btn{font-size:.6rem;padding:.25rem .6rem;cursor:pointer;border:1px solid var(--bg3);background:var(--bg);color:var(--cd)}.btn:hover{border-color:var(--leather);color:var(--cream)}
+.btn-p{background:var(--rust);border-color:var(--rust);color:var(--bg)}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;align-items:center;justify-content:center}.modal-bg.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--bg3);padding:1.5rem;width:420px;max-width:90vw}
+.modal h2{font-size:.8rem;margin-bottom:1rem;color:var(--rust)}
+.fr{margin-bottom:.5rem}.fr label{display:block;font-size:.55rem;color:var(--cm);text-transform:uppercase;letter-spacing:1px;margin-bottom:.15rem}
+.fr input,.fr select{width:100%;padding:.35rem .5rem;background:var(--bg);border:1px solid var(--bg3);color:var(--cream);font-family:var(--mono);font-size:.7rem}
+.acts{display:flex;gap:.4rem;justify-content:flex-end;margin-top:.8rem}
+.empty{text-align:center;padding:3rem;color:var(--cm);font-style:italic;font-size:.75rem}
+</style></head><body>
+<div class="hdr"><h1>MAINSPRING</h1><button class="btn btn-p" onclick="openForm()">+ New Job</button></div>
+<div class="main" id="main"></div>
+<div class="modal-bg" id="mbg" onclick="if(event.target===this)cm()"><div class="modal" id="mdl"></div></div>
 <script>
-const API="/api/jobs";let editId=null,timer=null,curFilter="";
-
-function showModal(id){editId=id||null;document.getElementById("mt").textContent=id?"Edit":"New";if(id){fetch(API+"/"+id).then(r=>r.json()).then(e=>{document.getElementById("f-name").value=e.name||"";document.getElementById("f-schedule").value=e.schedule||"";document.getElementById("f-command").value=e.command||"";document.getElementById("f-webhook_url").value=e.webhook_url||"";document.getElementById("f-enabled").value=e.enabled||"";document.getElementById("f-last_run_at").value=e.last_run_at||"";document.getElementById("f-last_result").value=e.last_result||"";document.getElementById("f-run_count").value=e.run_count||"";document.getElementById("f-fail_count").value=e.fail_count||"";})}else{document.getElementById("f-name").value="";document.getElementById("f-schedule").value="";document.getElementById("f-command").value="";document.getElementById("f-webhook_url").value="";document.getElementById("f-enabled").value="";document.getElementById("f-last_run_at").value="";document.getElementById("f-last_result").value="";document.getElementById("f-run_count").value="";document.getElementById("f-fail_count").value=""}document.getElementById("modal").style.display="flex"}
-function hideModal(){document.getElementById("modal").style.display="none";editId=null}
-function debounceSearch(){clearTimeout(timer);timer=setTimeout(load,300)}
-function filterBy(v){curFilter=v;load()}
-async function loadStats(){const r=await fetch("/api/stats");const d=await r.json();const el=document.getElementById("stats");let h='<div class="stat"><div class="stat-n">'+d.total+'</div><div class="stat-l">Total</div></div>';if(d.by_status){for(const[k,v]of Object.entries(d.by_status)){h+='<div class="stat"><div class="stat-n" style="color:'+stc(k)+'">'+v+'</div><div class="stat-l">'+k.replace(/_/g," ")+'</div></div>'}};el.innerHTML=h}
-async function load(){let url=API;const q=document.getElementById("search").value;const p=[];if(q)p.push("q="+encodeURIComponent(q));if(curFilter)p.push("status="+curFilter);if(p.length)url+="?"+p.join("&");const r=await fetch(url);const d=await r.json();const items=d.jobs||[];const el=document.getElementById("list");if(!items.length){el.innerHTML='<div class="empty">No jobs yet</div>';loadStats();return}
-el.innerHTML=items.map(e=>{return '<div class="item" ondblclick="showModal(\''+e.id+'\')"><span class="del" onclick="event.stopPropagation();del(\''+e.id+'\')">x</span><h3>'+e.name+'</h3><div class="item-meta"><span>${e.schedule||"\u2014"}</span><span>${e.command||"\u2014"}</span><span>${e.webhook_url||"\u2014"}</span><span>${e.enabled||"\u2014"}</span></div></div>'}).join("");loadStats()}
-async function save(){const body={"name":document.getElementById("f-name").value,"schedule":document.getElementById("f-schedule").value,"command":document.getElementById("f-command").value,"webhook_url":document.getElementById("f-webhook_url").value,"enabled":parseInt(document.getElementById("f-enabled").value)||0,"last_run_at":document.getElementById("f-last_run_at").value,"last_result":document.getElementById("f-last_result").value,"run_count":parseInt(document.getElementById("f-run_count").value)||0,"fail_count":parseInt(document.getElementById("f-fail_count").value)||0};const method=editId?"PUT":"POST";const url=editId?API+"/"+editId:API;await fetch(url,{method,headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});hideModal();load()}
-async function del(id){await fetch(API+"/"+id,{method:"DELETE"});load()}
-load();loadStats()
-fetch('/api/tier').then(r=>r.json()).then(j=>{if(j.tier==='free'){var b=document.getElementById('upgrade-banner');if(b)b.style.display='block'}}).catch(()=>{var b=document.getElementById('upgrade-banner');if(b)b.style.display='block'});
+const A='/api';let jobs=[];
+async function load(){const r=await fetch(A+'/jobs').then(r=>r.json());jobs=r.jobs||[];render();}
+function render(){if(!jobs.length){document.getElementById('main').innerHTML='<div class="empty">No scheduled jobs. Create one to get started.</div>';return;}
+let h='';jobs.forEach(j=>{
+h+='<div class="job"><div class="job-top"><div><div class="job-name">'+esc(j.name)+'</div><div class="job-schedule">'+esc(j.schedule||'manual')+'</div></div><div style="display:flex;gap:.4rem;align-items:center"><label class="toggle"><input type="checkbox" '+(j.enabled?'checked':'')+' onchange="tog(\''+j.id+'\')"><span class="sl"></span></label><button class="btn" onclick="run(\''+j.id+'\')">Run Now</button><button class="btn" onclick="del(\''+j.id+'\')" style="color:var(--cm)">✕</button></div></div>';
+if(j.command)h+='<div class="job-cmd">$ '+esc(j.command)+'</div>';
+if(j.webhook_url)h+='<div class="job-cmd">→ '+esc(j.webhook_url)+'</div>';
+h+='<div class="job-meta"><span>Runs: '+j.run_count+'</span><span>Fails: '+j.fail_count+'</span>';
+if(j.last_run_at)h+='<span>Last: '+ft(j.last_run_at)+'</span>';h+='</div>';
+if(j.last_result)h+='<div class="job-result '+(j.last_result.startsWith('error')||j.last_result.startsWith('fail')?'result-failed':'result-success')+'">'+esc(j.last_result)+'</div>';
+h+='</div>';});
+document.getElementById('main').innerHTML=h;}
+async function tog(id){await fetch(A+'/jobs/'+id+'/toggle',{method:'POST'});load();}
+async function run(id){await fetch(A+'/jobs/'+id+'/run',{method:'POST'});load();}
+async function del(id){if(confirm('Delete?')){await fetch(A+'/jobs/'+id,{method:'DELETE'});load();}}
+function openForm(){document.getElementById('mdl').innerHTML='<h2>New Scheduled Job</h2><div class="fr"><label>Name</label><input id="f-n" placeholder="e.g. Database backup"></div><div class="fr"><label>Schedule (cron)</label><input id="f-s" placeholder="*/5 * * * * (every 5 min)"></div><div class="fr"><label>Command (shell)</label><input id="f-c" placeholder="e.g. pg_dump mydb > backup.sql"></div><div class="fr"><label>Webhook URL (alternative)</label><input id="f-w" placeholder="https://..."></div><div class="acts"><button class="btn" onclick="cm()">Cancel</button><button class="btn btn-p" onclick="sub()">Create</button></div>';document.getElementById('mbg').classList.add('open');}
+async function sub(){await fetch(A+'/jobs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:document.getElementById('f-n').value,schedule:document.getElementById('f-s').value,command:document.getElementById('f-c').value,webhook_url:document.getElementById('f-w').value})});cm();load();}
+function cm(){document.getElementById('mbg').classList.remove('open');}
+function ft(t){if(!t)return'';return new Date(t).toLocaleDateString()+' '+new Date(t).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}
+function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+load();
 </script></body></html>`
